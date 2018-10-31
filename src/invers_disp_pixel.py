@@ -2,54 +2,54 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-# Author        : Simon DAOUT 
+# Author        : Simon DAOUT
 ################################################################################
 
 """\
 invers_disp_pixel.py
 -------------
-Temporal inversions of the time series delays of selected pixels (used depl_cumule (BIP format) and images_retenues, output of invers_pixel). 
+Temporal inversions of the time series delays of selected pixels (used depl_cumule (BIP format) and images_retenues, output of invers_pixel).
 
 Usage: invers_disp_pixel.py --cols=<values> --ligns=<values> [--cube=<path>] [--list_images=<path>] [--windowsize=<value>] [--windowrefsize=<value>]  [--lectfile=<path>] [--aps=<path>] \
 [--rmspixel=<path>] [--interseismic=<value>] [--threshold_rmsd=<value>] [--coseismic=<value>] [--postseismic=<value>] [--seasonal=<yes/no>] [--vector=<path>]\
 [--semianual=<yes/no>]  [--dem=<yes/no>] [--imref=<value>] [--cond=<value>] [--slowslip=<value>] [--ineq=<value>] \
-[--name=<value>] [--rad2mm=<value>] [--plot=<yes/no>] [<iref>] [<jref>] [--bounds=<value>] 
+[--name=<value>] [--rad2mm=<value>] [--plot=<yes/no>] [<iref>] [<jref>] [--bounds=<value>]
 
 invers_disp_pixel.py -h | --help
 Options:
 
 -h --help               Show this screen
---ncols VALUE           Pixel column numbers (eg. 200,400,450) 
---nligns VALUE          Pixel lign numbers  (eg. 1200,1200,3000) 
+--ncols VALUE           Pixel column numbers (eg. 200,400,450)
+--nligns VALUE          Pixel lign numbers  (eg. 1200,1200,3000)
 --cube PATH             Path to displacement file [default: depl_cumul_flat]
---list_images PATH      Path to list images file made of 4 columns containing for each images 1) number 2) date in YYYYMMDD format 3) numerical date 4) perpendicular baseline [default: images_retenues] 
+--list_images PATH      Path to list images file made of 4 columns containing for each images 1) number 2) date in YYYYMMDD format 3) numerical date 4) perpendicular baseline [default: images_retenues]
 --windowsize VALUE      Number of pixels around the pixel defining the window [default: 0]
---windowrefsize VALUE      Number of pixels around the referenced pixel defining the window [default: windowsize]
+--windowref size VALUE      Number of pixels around the referenced pixel defining the window [default: windowsize]
 --lectfile PATH         Path to the lect.in file (output of invers_pixel) [default: lect.in]
 --aps PATH              Path to the APS file giving the error associated to each dates [default: No weigthing]
---rmspixel PATH         Path to the RMS map giving the error associated to each pixel (e.g RMSpixel, output of invers_pixel) [default: None]        
+--rmspixel PATH         Path to the RMS map giving the error associated to each pixel (e.g RMSpixel, output of invers_pixel) [default: None]
 --interseismic PATH     Add a linear function to the inversion
---threshold_rmsd VALUE  If interseismic = yes: first try inversion with ref/interseismic/dem only, if RMDS inversion > threshold_rmsd then add other 
-basis functions [default: 1.] 
+--threshold_rmsd VALUE  If interseismic = yes: first try inversion with ref/interseismic/dem only, if RMDS inversion > threshold_rmsd then add other
+basis functions [default: 1.]
 --coseismic PATH        Add heaviside functions to the inversion .Indicate coseismic time (e.g 2004.,2006.)
---postseismic PATH      Add logarithmic transients to each coseismic step. Indicate characteristic time of the log function, must be a serie of values 
-of the same lenght than coseismic (e.g 1.,1.). To not associate postseismic function to a given coseismic step, put None (e.g None,1.) 
+--postseismic PATH      Add logarithmic transients to each coseismic step. Indicate characteristic time of the log function, must be a serie of values
+of the same lenght than coseismic (e.g 1.,1.). To not associate postseismic function to a given coseismic step, put None (e.g None,1.)
 --slowslip   VALUE      Add slow-slip function in the inversion (as defined by Larson et al., 2004). Indicate median and characteristic time of the events
-(e.g. 2004.,1,2006,0.5), default: None 
+(e.g. 2004.,1,2006,0.5), default: None
 --seasonal PATH         If yes, add seasonal terms in the inversion
 --semianual PATH        If yes, add semianual  terms in the inversion
 --vector PATH           Path to the vector text file containing a value for each dates [default: None]
 --dem PATH              If yes, add term proportional to the perpendicular baseline in the inversion
 --imref VALUE           Reference image number [default: 1]
 --cond VALUE            Condition value for optimization: Singular value smaller than cond*largest_singular_value are considered zero [default: 1.0e-10]
---ineq VALUE            If yes, add inequqlity constrained in the inversion: use least square result to iterate the inversion. Force postseismic to be the 
-same sign than coseismic [default: no].       
---name Value            Name output figures [default: None] 
+--ineq VALUE            If yes, add inequqlity constrained in the inversion: use least square result to iterate the inversion. Force postseismic to be the
+same sign than coseismic [default: no].
+--name Value            Name output figures [default: None]
 --rad2mm                Scaling value between input data (rad) and desired output [default: -4.4563]
---plot                  Display results [default: yes]            
---iref                  colum numbers of the reference pixel [default: None] 
+--plot                  Display results [default: yes]
+--iref                  colum numbers of the reference pixel [default: None]
 --jref                  lign number of the reference pixel [default: None]
---bounds                Min,Max time series plots 
+--bounds                Min,Max time series plots
 """
 
 # numpy
@@ -69,7 +69,7 @@ import os
 # plot
 import matplotlib
 if environ["TERM"].startswith("screen"):
-    matplotlib.use('Agg') 
+    matplotlib.use('Agg')
 from pylab import *
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -79,7 +79,7 @@ import datetime
 import time
 
 # docopt (command line parser)
-import docopt
+from nsbas import docopt
 
 
 ########################################################################
@@ -92,7 +92,7 @@ class pattern:
         self.name=name
         self.reduction=reduction
         self.date=date
-    
+
     def info(self):
         print self.name, self.date
 
@@ -204,13 +204,13 @@ class corrdem(pattern):
 
     def g(self,index):
         func = (self.bp-self.bpo)
-        return func[index]        
+        return func[index]
 
 class vector(pattern):
-    def __init__(self,name,reduction,vect):
+    def __init__(self,name,reduction,vec):
         self.name = name
         self.reduction = reduction
-        self.func=vect
+        self.func=vec
 
     def info(self):
         print self.name
@@ -233,13 +233,13 @@ else:
     listim = arguments["--list_images"]
 
 if arguments["--ineq"] ==  None:
-    ineq = 'no' 
+    ineq = 'no'
 else:
-    ineq = arguments["--ineq"] 
+    ineq = arguments["--ineq"]
 if arguments["--cond"] ==  None:
     rcond = 1.0e-10
 else:
-    rcond = float(arguments["--cond"]) 
+    rcond = float(arguments["--cond"])
 if arguments["--imref"] ==  None:
     imref = 0
 else:
@@ -260,6 +260,7 @@ if arguments["--windowrefsize"] ==  None:
     wref = np.copy(w)
 else:
     wref = int(arguments["--windowrefsize"])
+
 if arguments["--aps"] ==  None:
     apsf = None
 else:
@@ -296,9 +297,9 @@ else:
 if arguments["--slowslip"] == None:
     sse=[]
 else:
-    sse = map(float,arguments["--slowslip"].replace(',',' ').split()) 
+    sse = map(float,arguments["--slowslip"].replace(',',' ').split())
 sse_time = sse[::2]
-sse_car = sse[1::2]  
+sse_car = sse[1::2]
 
 if arguments["--vector"] != None:
     vect = arguments["--vector"]
@@ -325,12 +326,12 @@ else:
 if arguments["--threshold_rmsd"] ==  None:
     maxrmsd = 1.
 else:
-    maxrmsd = float(arguments["--threshold_rmsd"]) 
+    maxrmsd = float(arguments["--threshold_rmsd"])
 
 if arguments["--rad2mm"] ==  None:
     rad2mm = -4.4563
 else:
-    rad2mm = float(arguments["--rad2mm"]) 
+    rad2mm = float(arguments["--rad2mm"])
 
 if arguments["--plot"] ==  None:
     plot = 'yes'
@@ -348,7 +349,7 @@ if len(jpix) != len(ipix):
 # number of pixels
 Npix = len(ipix)
 
-# read lect.in 
+# read lect.in
 ncol, nlign = map(int, open(infile).readline().split(None, 2)[0:2])
 
 # load images_retenues file
@@ -395,7 +396,7 @@ if apsf is not None:
     inaps=np.loadtxt(apsf, comments='#', unpack=True,dtype='f')*rad2mm
     print 'Input uncertainties:', inaps
     print 'Set very low values to the 2 percentile to avoid overweighting...'
-    # maxinaps = np.nanmax(inaps) 
+    # maxinaps = np.nanmax(inaps)
     # inaps= inaps/maxinaps
 
     minaps= np.nanpercentile(inaps,2)
@@ -438,7 +439,7 @@ if inter=='yes':
       # 1
       indexinter=index
       index = index + 1
-      
+
 if seasonal=='yes':
    # 2
    indexseas = index
@@ -448,7 +449,7 @@ if seasonal=='yes':
 
 if semianual=='yes':
    # 4
-   indexsemi = index 
+   indexsemi = index
    basis.append(cos2var(name='semi. annual var (cos)',reduction='cos2wt',date=datemin))
    basis.append(sin2var(name='semi. annual var (sin)',reduction='sin2wt',date=datemin))
    index = index + 2
@@ -483,7 +484,7 @@ if dem=='yes':
    index = index + 1
 
 if vect != None:
-   kernels.append(vector(name='vector',reduction='vector',vect=v))
+   kernels.append(vector(name='vector',reduction='vector',vec=v))
    indexvect = index
    index = index + 1
 
@@ -504,12 +505,12 @@ for i in xrange((Mbasis)):
 #print indexco, cos
 #print indexpo, pos
 
-## inversion procedure 
+## inversion procedure
 def consInvert(A,b,sigmad,ineq='no',cond=1.0e-10, iter=2000,acc=1e-09):
     '''Solves the constrained inversion problem.
 
     Minimize:
-    
+
     ||Ax-b||^2
 
     Subject to:
@@ -520,7 +521,7 @@ def consInvert(A,b,sigmad,ineq='no',cond=1.0e-10, iter=2000,acc=1e-09):
         raise ValueError('Incompatible dimensions for A and b')
 
     if ineq == 'no':
-        
+
         # build Cov matrix
         Cd = np.diag(sigmad**2,k=0)
         Cov = (np.linalg.inv(Cd))
@@ -531,7 +532,7 @@ def consInvert(A,b,sigmad,ineq='no',cond=1.0e-10, iter=2000,acc=1e-09):
             fsoln = lst.lstsq(A,b,cond=cond)[0]
         print 'least-square solution:'
         print fsoln
-        print 
+        print
             # fsoln = np.ones((A.shape[1]))*float('NaN')
 
     else:
@@ -539,7 +540,7 @@ def consInvert(A,b,sigmad,ineq='no',cond=1.0e-10, iter=2000,acc=1e-09):
         Ain = np.copy(A)
         bin = np.copy(b)
 
-        ## We here want a solution as much conservatif as possible, ie only coseismic steps 
+        ## We here want a solution as much conservatif as possible, ie only coseismic steps
         ## least-squqre solution without post-seismic
         for i in xrange(len(indexco)):
             if pos[i] > 0.:
@@ -549,14 +550,14 @@ def consInvert(A,b,sigmad,ineq='no',cond=1.0e-10, iter=2000,acc=1e-09):
         print minit
 
         # # initialize bounds
-        mmin,mmax = -np.ones(M)*np.inf, np.ones(M)*np.inf 
+        mmin,mmax = -np.ones(M)*np.inf, np.ones(M)*np.inf
 
         # We here define bounds for postseismic to be the same sign than coseismic
-        # and coseisnic inferior or egal to the coseimic initial 
+        # and coseisnic inferior or egal to the coseimic initial
         for i in xrange(len(indexco)):
             if (pos[i] > 0.) and (minit[int(indexco[i])]>0.):
-                mmin[int(indexpo[i])], mmax[int(indexpo[i])] = 0, minit[int(indexco[i])] 
-                mmin[int(indexco[i])], mmax[int(indexco[i])] = 0, minit[int(indexco[i])] 
+                mmin[int(indexpo[i])], mmax[int(indexpo[i])] = 0, minit[int(indexco[i])]
+                mmin[int(indexco[i])], mmax[int(indexco[i])] = 0, minit[int(indexco[i])]
                 if minit[int(indexpo[i])] < 0 :
                     minit[int(indexpo[i])] = 0.
             if (pos[i] > 0.) and (minit[int(indexco[i])]<0.):
@@ -564,15 +565,15 @@ def consInvert(A,b,sigmad,ineq='no',cond=1.0e-10, iter=2000,acc=1e-09):
                 mmin[int(indexco[i])], mmax[int(indexco[i])] = minit[int(indexco[i])], 0
                 if minit[int(indexpo[i])] > 0 :
                     minit[int(indexpo[i])] = 0.
-        
+
         # print mmin,mmax
         ####Objective function and derivative
         _func = lambda x: np.sum(((np.dot(A,x)-b)/sigmad)**2)
         _fprime = lambda x: 2*np.dot(A.T/sigmad, (np.dot(A,x)-b)/sigmad)
-        
+
         bounds=zip(mmin,mmax)
         res = opt.fmin_slsqp(_func,minit,bounds=bounds,fprime=_fprime, \
-            iter=iter,full_output=True,iprint=0,acc=acc)  
+            iter=iter,full_output=True,iprint=0,acc=acc)
         fsoln = res[0]
 
         print 'optimization:'
@@ -603,8 +604,8 @@ if Npix > 2:
     fig = plt.figure(nfigure+1,figsize=(12,8))
 else:
     fig = plt.figure(nfigure+1,figsize=(10,4))
-if inter=='yes':  
-    if Npix > 2:  
+if inter=='yes':
+    if Npix > 2:
         fig3 = plt.figure(nfigure+3,figsize=(12,8))
     else:
         fig3 = plt.figure(nfigure+3,figsize=(10,4))
@@ -613,10 +614,15 @@ if seasonal == 'yes' or semianual == 'yes':
         fig2 = plt.figure(nfigure+2,figsize=(12,8))
     else:
         fig2 = plt.figure(nfigure+2,figsize=(10,4))
+if vect!=None:
+    if Npix > 2:
+        fig2 = plt.figure(nfigure+2,figsize=(12,8))
+    else:
+        fig2 = plt.figure(nfigure+2,figsize=(10,4))
 
 
 for jj in xrange((Npix)):
-    # initialize aps before iterations   
+    # initialize aps before iterations
     if apsf is None:
         aps = np.ones((N))
     else:
@@ -628,7 +634,7 @@ for jj in xrange((Npix)):
     print '---------------------------------------'
     print 'pixel:{} {}'.format(i,j)
     print '---------------------------------------'
-    print 
+    print
 
     x = [date2num(datetime.datetime.strptime('{}'.format(d),'%Y%m%d')) for d in idates]
     dmin = str(datemin) + '0101'
@@ -653,15 +659,18 @@ for jj in xrange((Npix)):
     # inversion model
     mdisp= np.ones((N))*float('NaN')
     demerr = np.zeros((N))
+    vecteur = np.zeros((N))
     lin = np.zeros((N))
     k = np.flatnonzero(~np.isnan(disp))
     kk = len(k)
     tabx = dates[k]
-    taby = disp[k] 
+    taby = disp[k]
     bp = base[k]
+    vec = v[k]
+
     # sigmad = aps
     sigmad = aps  # I don't want zero uncertainties
-    print 'data uncertainties', sigmad    
+    print 'data uncertainties', sigmad
 
     # initialize new aps for each images to 1
     aps = np.ones((N))
@@ -687,16 +696,16 @@ for jj in xrange((Npix)):
             # print sigmad
             # print taby
             mt,sigmamt = consInvert(Glin,taby,sigmad[k],cond=rcond)
-            
+
             # compute rmsd
             mdisp[k] = np.dot(Glin,mt)
 
-            # rmsd = np.sqrt(np.sum(pow((disp[k] - mdisp[k])/inaps[k],2))/kk) 
-            rmsd = np.sqrt(np.sum(pow((disp[k] - mdisp[k]),2))/kk) 
+            # rmsd = np.sqrt(np.sum(pow((disp[k] - mdisp[k])/inaps[k],2))/kk)
+            rmsd = np.sqrt(np.sum(pow((disp[k] - mdisp[k]),2))/kk)
 
-            print 
+            print
             print 'rmsd:', rmsd
-            print 
+            print
 
         G=np.zeros((kk,M))
         for l in xrange((Mbasis)):
@@ -704,7 +713,7 @@ for jj in xrange((Npix)):
         for l in xrange((Mker)):
             G[:,Mbasis+l]=kernels[l].g(k)
 
-        if rmsd >= maxrmsd or inter!='yes': 
+        if rmsd >= maxrmsd or inter!='yes':
             mt,sigmamt = consInvert(G,taby,sigmad[k],cond=rcond, ineq=ineq)
 
         # rebuild full vectors
@@ -712,97 +721,146 @@ for jj in xrange((Npix)):
             m[Mbasis:],sigmam[Mbasis:] = mt[-Mker:],sigmamt[-Mker:]
             m[:mt.shape[0]-Mker],sigmam[:mt.shape[0]-Mker] = mt[:-Mker],sigmamt[:-Mker]
         else:
-            m [:mt.shape[0]] = mt  
+            m [:mt.shape[0]] = mt
 
         # forward model in original order
         mdisp[k] = np.dot(G,m)
         demerr[k] =  np.dot(G[:,Mbasis:],m[Mbasis:])
+        vecteur[k] =  np.dot(G[:,Mbasis:],m[Mbasis:])
 
         print
         print 'computation time:', time.time() - t
         print
-        
+
 
     # plot at the end of iterations for each points
     ax = fig.add_subplot(Npix,1,jj+1)
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y/%m/%d"))
-    
+
     if inter=='yes':
         ax3 = fig3.add_subplot(Npix,1,jj+1)
         ax3.xaxis.set_major_formatter(mdates.DateFormatter("%Y/%m/%d"))
     if seasonal == 'yes' or semianual == 'yes':
         ax2 = fig2.add_subplot(Npix,1,jj+1)
         ax2.xaxis.set_major_formatter(mdates.DateFormatter("%Y/%m/%d"))
-    
+    if vect!=None:
+        ax2 = fig2.add_subplot(Npix,1,jj+1)
+        ax2.xaxis.set_major_formatter(mdates.DateFormatter("%Y/%m/%d"))
+
     # initialize variables
     disp_seas = np.zeros((N))
+    disp_vect = np.zeros((N))
 
     if inter=='yes':
         lin[k] = np.dot(G[:,indexinter],m[indexinter])
+
 
     # plot data and model minus dem error
     ax.plot(x,disp-demerr,'o',label='TS {}: lign: {}-{}, column: {}-{}'.format(jj,i-w,i+w,j-w,j+w))
     ax.errorbar(x,disp-demerr,yerr = sigmad, ecolor='blue',fmt='none', alpha=0.5)
     # ax.plot(x,mdisp-demerr,'o', label='model',color='red', alpha=0.5)
-    
+
     # plot data and model minus dem error and linear term
     if inter=='yes':
         ax3.plot(x,disp-demerr-lin,'o',label='detrended data')
         ax3.errorbar(x,disp-demerr-lin,yerr = sigmad, ecolor='blue',fmt='none', alpha=0.5)
         # ax3.plot(x,mdisp-demerr-lin,'o', label='detrended model',color='red', alpha=0.5)
-    
+    # if vect!=None:
+    #     ax3.plot(x,disp-demerr-vecteur-lin,'o',label='detrended data')
+    #     ax3.errorbar(x,disp-demerr-vecteur-lin,yerr = sigmad, ecolor='blue',fmt='none', alpha=0.5)
+    #
     # plot data and model minus dem error and seasonal terms
     if seasonal=='yes':
             G=np.zeros((kk,2))
             for l in xrange((2)):
                 G[:,l]=basis[l+indexseas].g(tabx)
             disp_seas[k] = disp_seas[k] + np.dot(G[:,:],m[indexseas:indexseas+2])
-        
+
     if semianual=='yes':
             G=np.zeros((kk,2))
             for l in xrange((2)):
                 G[:,l]=basis[l+indexsemi].g(tabx)
             disp_seas[k] = disp_seas[k] +  np.dot(G[:,:],m[indexsemi:indexsemi+2])
-            
+
+    # if vect!=None:
+    #        G=np.zeros((kk,2))
+    #        for l in xrange((Mker)):
+    #            G[:,l]=kernels[l].g(v)
+    #        disp_vec[k] = disp_vec[k] +  np.dot(G[:,:],m[indexvect:indexsemi+2])
+
     if semianual=='yes' or seasonal=='yes':
         ax2.plot(x,disp-disp_seas-demerr,'o',label='data -seasonal')
         # ax2.plot(x,mdisp-disp_seas-demerr,'o',color='red',alpha=0.5,label='model -seasonal')
         ax2.errorbar(x,disp-disp_seas-demerr,yerr = sigmad, ecolor='blue',fmt='none', alpha=0.3)
 
+    if vect!=None:
+        disp_vect[k] =disp_vect[k] + np.dot(G[:,indexvect],m[indexvect])
+
+        ax2.plot(x,disp-vecteur-demerr,'o',label='data -seasonal')
+#        ax2.plot(x,vecteur,'o',color='red',alpha=0.5,label='model -seasonal')
+        ax2.errorbar(x,disp-disp_vect-demerr,yerr = sigmad, ecolor='blue',fmt='none', alpha=0.3)
 
     # create synthetic time
     t = np.array([xmin + datetime.timedelta(days=d) for d in range(0, 2920)])
     tdec = np.array([float(date.strftime('%Y')) + float(date.strftime('%j'))/365.1 for date in t])
     mseas = np.zeros(len(tdec))
+    model_vect = np.zeros(len(tdec))
 
-    G=np.zeros((len(tdec),M))
+    tdec = tabx
+    mseas = np.zeros(len(tdec))
+
+    tabx = dates[k]
+    new_dt = idates[k]
+
+    temps = [datetime.datetime.strptime('{}'.format(d),'%Y%m%d') for d in new_dt]
+
+
+    G=np.zeros((len(tabx),M))
+
     for l in xrange((Mbasis)):
-        G[:,l]=basis[l].g(tdec)
-       
+        G[:,l]=basis[l].g(tabx)
+    for l in xrange((Mker)):
+        G[:,Mbasis+l]=kernels[l].g(k)
+        # t = [datetime.datetime.strptime('{}'.format(d),'%Y%m%d') for d in new_dt]
+
     # correct ??
-    model = np.dot(G[:,:Mbasis],m[:Mbasis])
+    model = np.dot(G[:,:],m[:])
+
+    print model.shape
     if inter=='yes':
         model_lin = np.dot(G[:,indexinter],m[indexinter])
-
+    if vect!=None:
+        model_vect = np.dot(G[:,indexvect],m[indexvect])
     # plot model
-    ax.plot(t,model,'-r')
+
+    ax.plot(temps,model,'-r')
     if inter=='yes':
-        ax3.plot(t,model-model_lin,'-r')
-        
+        ax3.plot(temps,model-model_lin,'-r')
+
+    # if vect!=None:
+    #     ax2.plot(temps,model-model_vect,'-r')
+
     if seasonal=='yes':
         G=np.zeros((len(tdec),2))
         for l in xrange((2)):
             G[:,l]=basis[l+indexseas].g(tdec)
         mseas = mseas + np.dot(G[:,:],m[indexseas:indexseas+2])
-        
+
     if semianual=='yes':
         G=np.zeros((len(tdec),2))
         for l in xrange((2)):
             G[:,l]=basis[l+indexsemi].g(tdec)
         mseas = mseas + np.dot(G[:,:],m[indexsemi:indexsemi+2])
-            
+
     if seasonal=='yes' or semianual=='yes':
-        ax2.plot(t,model-mseas,'-r')
+        ax2.plot(temps,model-mseas,'-r')
+        ax2.legend(loc='best',fontsize='x-small')
+        ax2.set_xlim(xlim)
+        if arguments["--bounds"] is not  None:
+            ax2.set_ylim(ylim)
+
+    if vect!=None:
+        ax2.plot(temps,model-model_vect,'-r')
         ax2.legend(loc='best',fontsize='x-small')
         ax2.set_xlim(xlim)
         if arguments["--bounds"] is not  None:
@@ -812,7 +870,7 @@ for jj in xrange((Npix)):
     ax.set_xlim(xlim)
     if arguments["--bounds"] is not  None:
         ax.set_ylim(ylim)
-    
+
     if inter=='yes':
         ax3.legend(loc='best',fontsize='x-small')
         ax3.set_xlim(xlim)
@@ -825,7 +883,7 @@ for jj in xrange((Npix)):
     # fig.savefig('Disp_{}.eps'.format(output), format='EPS')
     fig.savefig('Disp_{}.pdf'.format(output), format='PDF')
 
-    if inter=='yes':    
+    if inter=='yes':
         fig3.autofmt_xdate()
         ax3.set_xlabel('Time (Year/month/day)')
         ax3.set_ylabel('Displacements (mm)')
@@ -838,6 +896,13 @@ for jj in xrange((Npix)):
         ax2.set_ylabel('Displacements (mm)')
         # fig2.savefig('Disp_{}_deseas.eps'.format(output), format='EPS')
         fig2.savefig('Disp_{}_deseas.pdf'.format(output), format='PDF')
+
+    if vect!=None:
+        fig2.autofmt_xdate()
+        ax2.set_xlabel('Time (Year/month/day)')
+        ax2.set_ylabel('Displacements (mm)')
+        # fig2.savefig('Disp_{}_deseas.eps'.format(output), format='EPS')
+        fig2.savefig('Disp_{}_devect.pdf'.format(output), format='PDF')
 
 
     if seasonal == 'yes':
