@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-# Author        : Simon DAOUT 
+# Author        : Simon DAOUT
 ################################################################################
 
 """\
@@ -14,13 +14,13 @@ Usage: lect_cube_pixel.py --cols=<values> --ligns=<values> [--cube=<path>] [--le
 [--ref=<path>] [--slope=<path>] [--coseismic=<paths>] [--postseismic=<paths>] [--slowslip=<value>] \
  [--cos=<path>] [--sin=<path>] [--dem=<path>] [--aps=<path>] \
  [--rad2mm=<value>] [--plot=<yes/no>] [--name=<value>] [--imref=<value>] \
- [<iref>] [<jref>] [--bounds=<value>] 
+ [<iref>] [<jref>] [--bounds=<value>]
 
 
 Options:
 -h --help           Show this screen
---ncols VALUE       Pixels column numbers (eg. 200,400,450) 
---nligns VALUE      Pixels lign numbers pixel (eg. 1200,1200,3000) 
+--ncols VALUE       Pixels column numbers (eg. 200,400,450)
+--nligns VALUE      Pixels lign numbers pixel (eg. 1200,1200,3000)
 --cube PATH         Path to displacement file [default: depl_cumul_flat]
 --lectfile PATH     Path of the lect.in file [default: lect.in]
 --ref PATH          Path to the reference map in r4 format (e.g ref_coeff.r4) [default: ref_coeff.r4]
@@ -34,12 +34,12 @@ Options:
 --dem PATH          Path to dem file error map in r4 format (demerr_coeff.r4) [default: None]
 --aps PATH          Path to aps file: 1 column file given aps for each dates (eg. aps.txt) [default: None]
 --rad2mm                Scaling value between input data (rad) and desired output [default: -4.4563]
---name Value            Name output figures [default: None] 
---plot                  Display results [default: yes]            
---iref              colum numbers of the reference pixel [default: None] 
+--name Value            Name output figures [default: None]
+--plot                  Display results [default: yes]
+--iref              colum numbers of the reference pixel [default: None]
 --jref              lign number of the reference pixel [default: None]
 --imref VALUE           Reference image number [default: 1]
---bounds                Min,Max time series plots 
+--bounds                Min,Max time series plots
 """
 
 # numpy
@@ -126,7 +126,7 @@ else:
 if arguments["--rad2mm"] ==  None:
     rad2mm = -4.4563
 else:
-    rad2mm = float(arguments["--rad2mm"]) 
+    rad2mm = float(arguments["--rad2mm"])
 
 if arguments["--name"] ==  None:
     output = None
@@ -151,9 +151,9 @@ if arguments["--bounds"] is not  None:
 if arguments["--slowslip"] == None:
     sse=[]
 else:
-    sse = map(float,arguments["--slowslip"].replace(',',' ').split()) 
+    sse = map(float,arguments["--slowslip"].replace(',',' ').split())
 sse_time = sse[::2]
-sse_car = sse[1::2]  
+sse_car = sse[1::2]
 
 # create a list of pixels
 ipix = map(int,arguments["--cols"].replace(',',' ').split())
@@ -163,7 +163,7 @@ if len(jpix) != len(ipix):
 # number of pixels
 Npix = len(ipix)
 
-# read lect.in 
+# read lect.in
 ncol, nlign = map(int, open(infile).readline().split(None, 2)[0:2])
 
 #initialize figures
@@ -179,12 +179,13 @@ base = base - base[imref]
 # load
 if apsf is not None:
     inaps=np.loadtxt(apsf, comments='#', unpack=True,dtype='f')*rad2mm
-
+else:
+    inaps=np.zeros((N)) +0.01
 # lect cube
 cube = np.fromfile(cubef,dtype=np.float32)*rad2mm
 maps = cube.reshape((nlign,ncol,N))
 print 'Reshape cube: ', maps.shape
-listplot = [maps[:,:,-1]] 
+listplot = [maps[:,:,-1]]
 titles = ['Depl. Cumul.']
 
 if slopef is not None:
@@ -222,13 +223,13 @@ for i in xrange(M):
 for i in xrange((M)):
     if postimes[i] > 0:
         postmaps[i,:,:] = np.fromfile('post{}_coeff.r4'.format(i),dtype=np.float32).reshape((nlign,ncol))*rad2mm
-    else: 
+    else:
         postmaps[i,:,:] = np.zeros((nlign,ncol))
     listplot.append(postmaps[i,:,:])
     titles.append('Post.{}'.format(i))
 
 sse_times = sse[::2]
-sse_car = sse[1::2] 
+sse_car = sse[1::2]
 
 L = len(sse_times)
 ssemaps=np.zeros((M,nlign,ncol))
@@ -292,7 +293,7 @@ for k in xrange(len(ipix)):
     x = [date2num(datetime.datetime.strptime('{}'.format(d),'%Y%m%d')) for d in idates]
     dmin = str(datemin) + '0101'
     dmax = str(datemax) + '0101'
-    xmin = datetime.datetime.strptime('{}'.format(dmin),'%Y%m%d') 
+    xmin = datetime.datetime.strptime('{}'.format(dmin),'%Y%m%d')
     xmax = datetime.datetime.strptime('{}'.format(dmax),'%Y%m%d')
     xlim=date2num(np.array([xmin,xmax]))
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y/%m/%d"))
@@ -339,26 +340,26 @@ for k in xrange(len(ipix)):
 
     for l in xrange(len(cotimes)):
         if iref is not None:
-            steps[l] = coseismaps[l,j,i] - coseismaps[l,jref,iref] 
-            trans[l] =postmaps[l,j,i] - postmaps[l,jref,iref] 
+            steps[l] = coseismaps[l,j,i] - coseismaps[l,jref,iref]
+            trans[l] =postmaps[l,j,i] - postmaps[l,jref,iref]
         else:
             steps[l] = coseismaps[l,j,i]
             trans[l] = postmaps[l,j,i]
-   
+
     for l in xrange(len(sse_times)):
       if iref is not None:
-          sse[l] = ssemaps[l,j,i] - ssemaps[l,jref,iref] 
+          sse[l] = ssemaps[l,j,i] - ssemaps[l,jref,iref]
       else:
           sse[l] = ssemaps[l,j,i]
 
     t = np.array([xmin + datetime.timedelta(days=d) for d in range(0, 2920)])
     tdec = np.array([float(date.strftime('%Y')) + float(date.strftime('%j'))/365.1 for date in t])
-   
+
     print
-    print i,j 
+    print i,j
     print  ref, lin, steps, trans
 
-    model = ref + linear(tdec,lin) + seasonal(tdec, a, b) 
+    model = ref + linear(tdec,lin) + seasonal(tdec, a, b)
     for l in xrange((M)):
         model = model + coseismic(tdec, cotimes[l], steps[l]) + \
         postseismic(tdec,cotimes[l],postimes[l],trans[l])
@@ -381,5 +382,3 @@ fig.savefig('Model_{}.eps'.format(output), format='EPS', dpi=150)
 if plot == 'yes':
     plt.show()
 sys.exit()
-
-
